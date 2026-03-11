@@ -1,0 +1,64 @@
+# Pakete laden
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# pH Bereich
+ph <- seq(3, 9, length.out = 400)
+
+# Gaußfunktion zur Approximation
+gauss <- function(x, mu, sigma){
+  exp(-0.5*((x-mu)/sigma)^2)
+}
+
+# Datensatz erstellen
+data <- data.frame(
+  ph = ph,
+  N  = gauss(ph, 6.5, 1.3),
+  P  = gauss(ph, 6.5, 0.9),
+  K  = gauss(ph, 6.8, 1.4),
+  Ca = gauss(ph, 7.2, 1.2),
+  Mg = gauss(ph, 7.0, 1.2),
+  S  = gauss(ph, 6.3, 1.3),
+  Fe = gauss(ph, 4.8, 1.0),
+  Mn = gauss(ph, 5.0, 1.0),
+  Zn = gauss(ph, 5.3, 1.0),
+  Cu = gauss(ph, 5.5, 1.0),
+  B  = gauss(ph, 5.7, 1.0),
+  Mo = gauss(ph, 7.8, 0.9),
+  Al = gauss(ph, 4.3, 0.8),
+  Microbes = gauss(ph, 6.7, 1.2)
+)
+
+# Daten ins lange Format bringen
+data_long <- data |>
+  pivot_longer(-ph, names_to="Nutrient", values_to="availability")
+
+# Reihenfolge festlegen
+levels <- c(
+  "N","P","K","Ca","Mg","S",
+  "Fe","Mn","Zn","Cu","B",
+  "Mo","Al","Microbes"
+)
+
+data_long$Nutrient <- factor(data_long$Nutrient, levels = levels)
+
+# Plot
+p <- ggplot(data_long, aes(ph, availability)) +
+  geom_area() +
+  facet_wrap(~Nutrient, ncol = 1, scales = "free_y") +
+  labs(
+    title = "Einfluss des pH-Werts auf Nährstoffverfügbarkeit, Metallmobilität und Bodenbiologie",
+    x = "pH-Wert des Bodens",
+    y = "Relative Verfügbarkeit / Mobilität"
+  ) +
+  theme_minimal(base_size = 14)
+
+# Speichern
+ggsave(
+  "ph_boden_naehrstoffverfuegbarkeit.png",
+  plot = p,
+  width = 12,
+  height = 8,
+  dpi = 300
+)
